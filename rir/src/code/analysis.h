@@ -390,9 +390,10 @@ class BackwardAnalysis : public Analysis {
                             }
                         }
 
-                        // if prev is unconditional jump elswhere, terminate branch
+                        // if prev is unconditional jump elswhere or return, terminate branch
                         BC prev = *(currentIns_ - 1);
-                        if (prev.is(BC_t::br_) && code_->target(prev) != currentIns_) {
+                        if ((prev.is(BC_t::br_) && code_->target(prev) != currentIns_) ||
+                                prev.isReturn()) {
                             // all origins already in q_
                             delete currentState_;
                             currentState_ = nullptr;
