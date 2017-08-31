@@ -14,6 +14,7 @@
 #include "utils/FunctionHandle.h"
 
 #include "analysis/Signature.h"
+#include "analysis/strictness/StrictnessAnalyzer.hpp"
 #include "analysis_framework/analysis.h"
 #include "optimization/cp.h"
 #include "utils/Printer.h"
@@ -100,6 +101,14 @@ REXPORT SEXP rir_analysis_signature(SEXP what) {
     return sa.finalState().exportToR();
 }
 
+REXPORT SEXP rir_analysis_strictness(SEXP object) {
+    if (TYPEOF(object) != CLOSXP)
+        return R_NilValue;
+    CodeEditor ce(object);
+    StrictnessAnalyzer analyzer;
+    analyzer.analyze(ce);
+    return analyzer.finalState().exportToR();
+}
 // startup ---------------------------------------------------------------------
 
 bool startup() {

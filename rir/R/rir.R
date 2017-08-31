@@ -46,3 +46,5 @@ rir.analysis.signature <- function(f) {
     names(result) <- x[[2]]
     result
 }
+
+rir.analysis.strictness <- function(f) .Call("rir_analysis_strictness", f)
