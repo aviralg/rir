@@ -14,11 +14,11 @@ rir.disassemble <- function(what) {
     invisible(.Call("rir_disassemble", what))
 }
 
-# prints the disassembled versions of list of rir compiled expressions
-rir.disassemble.file <- function(code_objects) {
-  Map(rir.disassemble, code_objects)
-  NULL
-}
+## # prints the disassembled versions of list of rir compiled expressions
+## rir.disassemble.program <- function(code_objects) {
+##   Map(rir.disassemble, code_objects)
+##   NULL
+## }
 
 # compiles given closure, or expression and returns the compiled version.
 rir.compile <- function(what) {
@@ -31,9 +31,11 @@ rir.compile <- function(what) {
 }
 
 # compiles code of the given file and returns the list of compiled version.
-rir.compile.file <- function(file) {
-  expr <- parse(file = file)
-  Map(rir.compile, as.list(expr))
+rir.compile.program <- function(file) {
+  contents <- readChar(file, file.info(file)$size)
+  expr <- eval(parse(text = paste("function() {", contents, "}", sep = "\n")))
+  rir.compile(expr)
+  #Map(rir.compile, as.list(expr))
 }
 
 rir.eval <- function(what, env = globalenv()) {
@@ -50,4 +52,16 @@ rir.analysis.signature <- function(f) {
     result = x[[1]]
     names(result) <- x[[2]]
     result
+}
+
+rir.analysis.strictness.intraprocedural <- function(body) {
+  .Call("rir_analysis_strictness_intraprocedural", body)
+}
+
+rir.interprocedural.preprocess <- function(name, body) {
+  .Call("rir_strictness_analysis_preprocess", name, body);
+}
+
+rir.interprocedural.fixedpoint <- function() {
+  .Call("rir_strictness_analysis_fixedpoint");
 }

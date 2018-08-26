@@ -424,6 +424,20 @@ class CodeEditor {
         }
     }
 
+  std::vector<SEXP> argumentTags() const {
+    if (formals_ == nullptr) {
+      return std::vector<SEXP>();
+    } else {
+      std::vector<SEXP> result;
+      SEXP formals = formals_;
+      while (formals != R_NilValue) {
+        result.push_back(TAG(formals));
+        formals = CDR(formals);
+      }
+      return result;
+    }
+  }
+
     void loadCode(FunctionHandle function, CodeHandle code);
 
     ~CodeEditor();

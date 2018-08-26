@@ -15,6 +15,7 @@
 
 #include "optimizer/Printer.h"
 #include "code/analysis.h"
+#include "optimizer/strictr/InterproceduralStrictnessAnalysis.h"
 #include "optimizer/cp.h"
 #include "optimizer/Signature.h"
 
@@ -99,6 +100,26 @@ REXPORT SEXP rir_analysis_signature(SEXP what) {
     sa.analyze(ce);
     return sa.finalState().exportToR();
 }
+
+REXPORT SEXP rir_analysis_strictness_intraprocedural(SEXP functionBody) {
+  IntraproceduralStrictnessAnalysis analysis;
+  CodeEditor ce(functionBody);
+  analysis.analyze(ce);
+  return analysis.finalState().exportToR();
+}
+
+REXPORT SEXP rir_strictness_analysis_preprocess(SEXP functionName,
+                                                SEXP functionBody) {
+    const char* name = CHAR(STRING_ELT(functionName, 0));
+    return InterproceduralStrictnessAnalysis::preprocess(name, functionBody).exportToR();
+}
+
+REXPORT SEXP rir_strictness_analysis_fixedpoint() {
+    Rf_PrintValue(InterproceduralStrictnessAnalysis::exportToR());
+    InterproceduralStrictnessAnalysis::computeFixedPoint();
+    return InterproceduralStrictnessAnalysis::exportToR();
+}
+
 
 // startup ---------------------------------------------------------------------
 

@@ -156,7 +156,7 @@ protected:
     std::deque<AVALUE> stack_;
 };
 
-template <typename AVALUE>
+template <typename KEY, typename AVALUE>
 class AbstractEnvironment : public State {
     static_assert(std::is_copy_constructible<AVALUE>::value,
                   "Abstract values must be copy constructible");
