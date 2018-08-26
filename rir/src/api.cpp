@@ -13,11 +13,11 @@
 
 #include "utils/FunctionHandle.h"
 
-#include "optimizer/Printer.h"
-#include "code/analysis.h"
-#include "optimizer/strictr/InterproceduralStrictnessAnalysis.h"
-#include "optimizer/cp.h"
-#include "optimizer/Signature.h"
+#include "analysis/Signature.h"
+#include "analysis/strictness/StrictnessAnalyzer.hpp"
+#include "analysis_framework/analysis.h"
+#include "optimization/cp.h"
+#include "utils/Printer.h"
 
 #include "ir/Optimizer.h"
 
@@ -71,7 +71,7 @@ REXPORT SEXP rir_markOptimize(SEXP what) {
         return R_NilValue;
     SEXP b = BODY(what);
     isValidFunctionSEXP(b);
-    Function* fun = (Function*)INTEGER(b);
+    Function* fun = sexp2function(b);
     fun->markOpt = true;
     return R_NilValue;
 }
@@ -82,14 +82,14 @@ REXPORT SEXP rir_eval(SEXP what, SEXP env) {
         f = isValidClosureSEXP(what);
     if (f == nullptr)
         Rf_error("Not rir compiled code");
-    return evalRirCode(functionCode(f), globalContext(), env, 0);
+    return evalRirCode(bodyCode(f), globalContext(), env, 0);
 }
 
 REXPORT SEXP rir_body(SEXP cls) {
     ::Function * f = isValidClosureSEXP(cls);
     if (f == nullptr)
         Rf_error("Not a valid rir compiled function");
-    return functionSEXP(f);
+    return function2store(f);
 }
 
 REXPORT SEXP rir_analysis_signature(SEXP what) {
@@ -101,26 +101,14 @@ REXPORT SEXP rir_analysis_signature(SEXP what) {
     return sa.finalState().exportToR();
 }
 
-REXPORT SEXP rir_analysis_strictness_intraprocedural(SEXP functionBody) {
-  IntraproceduralStrictnessAnalysis analysis;
-  CodeEditor ce(functionBody);
-  analysis.analyze(ce);
-  return analysis.finalState().exportToR();
+REXPORT SEXP rir_analysis_strictness(SEXP object) {
+    if (TYPEOF(object) != CLOSXP)
+        return R_NilValue;
+    CodeEditor ce(object);
+    StrictnessAnalyzer analyzer;
+    analyzer.analyze(ce);
+    return analyzer.finalState().exportToR();
 }
-
-REXPORT SEXP rir_strictness_analysis_preprocess(SEXP functionName,
-                                                SEXP functionBody) {
-    const char* name = CHAR(STRING_ELT(functionName, 0));
-    return InterproceduralStrictnessAnalysis::preprocess(name, functionBody).exportToR();
-}
-
-REXPORT SEXP rir_strictness_analysis_fixedpoint() {
-    Rf_PrintValue(InterproceduralStrictnessAnalysis::exportToR());
-    InterproceduralStrictnessAnalysis::computeFixedPoint();
-    return InterproceduralStrictnessAnalysis::exportToR();
-}
-
-
 // startup ---------------------------------------------------------------------
 
 bool startup() {
